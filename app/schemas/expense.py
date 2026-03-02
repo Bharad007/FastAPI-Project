@@ -13,3 +13,7 @@ class ExpenseOut(ExpenseCreate):
 
     class Config:
         orm_mode = True
+
+class ExpenseUpdate(BaseModel):
+    amount: Optional[float] = None
+    description: Optional[str] = None
