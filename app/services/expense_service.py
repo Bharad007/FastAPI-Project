@@ -29,10 +29,15 @@ def update_expense(db: Session, user_id: int, exp_id: int, exp_in):
     if not expense or expense.user_id != user_id:
         raise HTTPException(status_code=404, detail="Expense not found")
     
+    if exp_in.amount is None and exp_in.description is None:
+        raise HTTPException(status_code=400, detail="At least one field (amount or description) must be provided for update")
+    
     if exp_in.amount is not None:
         expense.amount = exp_in.amount
+    
     if exp_in.description is not None:
         expense.description = exp_in.description
+    
     db.commit()
     db.refresh(expense)
     return expense
@@ -48,3 +53,18 @@ def delete_expense(db: Session, user_id: int, exp_id: int):
     
     db.delete(expense)
     db.commit()
+
+def replace_expense(db: Session, user_id: int, exp_id: int, exp_in):
+    expense = (
+        db.query(models.Expense)
+        .filter(models.Expense.id == exp_id)
+        .first()
+    )
+    if not expense or expense.user_id != user_id:
+        raise HTTPException(status_code=404, detail="Expense not found")
+    
+    expense.amount = exp_in.amount
+    expense.description = exp_in.description
+    db.commit()
+    db.refresh(expense)
+    return expense

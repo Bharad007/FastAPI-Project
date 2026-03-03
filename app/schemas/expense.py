@@ -17,3 +17,7 @@ class ExpenseOut(ExpenseCreate):
 class ExpenseUpdate(BaseModel):
     amount: Optional[float] = None
     description: Optional[str] = None
+
+class ExpenseReplace(BaseModel):
+    amount: float
+    description: str
