@@ -21,3 +21,12 @@ class ExpenseUpdate(BaseModel):
 class ExpenseReplace(BaseModel):
     amount: float
     description: str
+
+class ExpenseSummary(BaseModel):
+    total_amount: float
+    from_date: str
+    to_date: str
+
+class MonthlyExpenseSummary(BaseModel):
+    month: str
+    total: float

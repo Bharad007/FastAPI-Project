@@ -1,8 +1,10 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from ..schemas.expense import ExpenseCreate, ExpenseOut, ExpenseUpdate, ExpenseReplace
+from ..schemas.expense import ExpenseCreate, ExpenseOut, ExpenseUpdate, ExpenseReplace, ExpenseSummary, MonthlyExpenseSummary
 from ..services import expense_service
 from ..dependencies import get_db, get_current_user
+from datetime import datetime, time, date
+from typing import List
 
 router = APIRouter(prefix="/expenses", tags=["expenses"])
 
@@ -12,7 +14,7 @@ def create(exp_in: ExpenseCreate,
            current_user=Depends(get_current_user)):
     return expense_service.create_expense(db, current_user.id, exp_in)
 
-@router.get("/", response_model=list[ExpenseOut])
+@router.get("/", response_model=List[ExpenseOut])
 def list(
     skip: int = 0,
     limit: int = 100,
@@ -46,3 +48,19 @@ def replace_expense(
     current_user=Depends(get_current_user)
 ):
     return expense_service.replace_expense(db, current_user.id, expense_id, exp_in)
+
+@router.get("/summary", response_model=ExpenseSummary)
+def expense_summary(
+    from_date: date,
+    to_date: date,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user)
+):
+    return expense_service.expense_summary(db, current_user.id, from_date, to_date) 
+
+@router.get("/summary/monthly", response_model=List[MonthlyExpenseSummary])
+def monthly_expense_summary(
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user)
+):
+    return expense_service.monthly_summary(db, current_user.id)
