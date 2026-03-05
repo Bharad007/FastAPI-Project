@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from ..db import models
-from ..schemas.expense import ExpenseCreate
+from ..schemas.expense import ExpenseCreate, CategoryExpenseSummary
 import fastapi as FastAPI
 from fastapi import HTTPException
 from sqlalchemy import func
@@ -106,4 +106,24 @@ def monthly_summary(db: Session, user_id: int):
     return [
         {"month": row.month, "total": row.total}
         for row in results
+    ]
+
+def category_summary(db: Session, user_id: int):
+
+    results = (
+        db.query(
+            models.Expense.category,
+            func.sum(models.Expense.amount).label("total")
+        )
+        .filter(models.Expense.user_id == user_id)
+        .group_by(models.Expense.category)
+        .all()
+    )
+
+    return [
+        CategoryExpenseSummary(
+            category=r.category,
+            total=r.total
+        )
+        for r in results
     ]

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from ..schemas.expense import ExpenseCreate, ExpenseOut, ExpenseUpdate, ExpenseReplace, ExpenseSummary, MonthlyExpenseSummary
+from ..schemas.expense import ExpenseCreate, ExpenseOut, ExpenseUpdate, ExpenseReplace, ExpenseSummary, MonthlyExpenseSummary, CategoryExpenseSummary
 from ..services import expense_service
 from ..dependencies import get_db, get_current_user
 from datetime import datetime, time, date
@@ -64,3 +64,10 @@ def monthly_expense_summary(
     current_user=Depends(get_current_user)
 ):
     return expense_service.monthly_summary(db, current_user.id)
+
+@router.get("/summary/category", response_model=List[CategoryExpenseSummary])
+def category_expense_summary(
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user)
+):
+    return expense_service.category_summary(db, current_user.id)
