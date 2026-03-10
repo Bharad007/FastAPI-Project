@@ -13,14 +13,39 @@ def create_expense(db: Session, user_id: int, exp_in: ExpenseCreate) -> models.E
     db.refresh(expense)
     return expense
 
-def list_expenses(db: Session, user_id: int, skip: int, limit: int):
-    return (
-        db.query(models.Expense)
-        .filter(models.Expense.user_id == user_id)
-        .offset(skip)
-        .limit(limit)
-        .all()
+def list_expenses(
+    db: Session,
+    user_id: int,
+    skip: int,
+    limit: int,
+    category=None,
+    min_amount=None,
+    max_amount=None,
+    sort_by="created_at",
+    order="desc"
+):
+
+    query = db.query(models.Expense).filter(
+        models.Expense.user_id == user_id
     )
+
+    if category:
+        query = query.filter(models.Expense.category == category)
+
+    if min_amount:
+        query = query.filter(models.Expense.amount >= min_amount)
+
+    if max_amount:
+        query = query.filter(models.Expense.amount <= max_amount)
+
+    sort_column = getattr(models.Expense, sort_by)
+
+    if order == "desc":
+        query = query.order_by(sort_column.desc())
+    else:
+        query = query.order_by(sort_column.asc())
+
+    return query.offset(skip).limit(limit).all()
 
 def update_expense(db: Session, user_id: int, exp_id: int, exp_in):
     expense = (

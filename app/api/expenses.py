@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from ..schemas.expense import ExpenseCreate, ExpenseOut, ExpenseUpdate, ExpenseReplace, ExpenseSummary, MonthlyExpenseSummary, CategoryExpenseSummary
+from ..schemas.expense import ExpenseCreate, ExpenseOut, ExpenseUpdate, ExpenseReplace, ExpenseSummary, MonthlyExpenseSummary, CategoryExpenseSummary, ExpenseCategory
 from ..services import expense_service
 from ..dependencies import get_db, get_current_user
 from datetime import datetime, time, date
-from typing import List
+from typing import List, Optional
 
 router = APIRouter(prefix="/expenses", tags=["expenses"])
 
@@ -18,10 +18,15 @@ def create(exp_in: ExpenseCreate,
 def list(
     skip: int = 0,
     limit: int = 100,
+    category: Optional[ExpenseCategory] = None,
+    min_amount: Optional[float] = None,
+    max_amount: Optional[float] = None,
+    sort_by: str = "created_at",
+    order: str = "desc",
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user)
 ):
-    return expense_service.list_expenses(db, current_user.id, skip, limit)
+    return expense_service.list_expenses(db, current_user.id, skip, limit, category, min_amount, max_amount, sort_by, order)
 
 @router.patch("/{expense_id}", response_model=ExpenseOut)
 def update(
