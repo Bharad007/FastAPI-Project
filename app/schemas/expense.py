@@ -40,3 +40,9 @@ class MonthlyExpenseSummary(BaseModel):
 class CategoryExpenseSummary(BaseModel):
     category: str
     total: float
+
+class ExpenseResponse(BaseModel):
+    total: int
+    limit: int
+    skip: int       
+    data: list[ExpenseOut]

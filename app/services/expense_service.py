@@ -13,6 +13,12 @@ def create_expense(db: Session, user_id: int, exp_in: ExpenseCreate) -> models.E
     db.refresh(expense)
     return expense
 
+ALLOWED_SORT_FIELDS = {
+    "amount": models.Expense.amount,
+    "created_at": models.Expense.created_at,
+    "category": models.Expense.category
+}
+
 def list_expenses(
     db: Session,
     user_id: int,
@@ -22,12 +28,16 @@ def list_expenses(
     min_amount=None,
     max_amount=None,
     sort_by="created_at",
-    order="desc"
+    order="desc",
+    search=None
 ):
 
     query = db.query(models.Expense).filter(
         models.Expense.user_id == user_id
     )
+
+    if search:
+        query = query.filter(models.Expense.description.ilike(f"%{search}%"))
 
     if category:
         query = query.filter(models.Expense.category == category)
@@ -38,14 +48,33 @@ def list_expenses(
     if max_amount:
         query = query.filter(models.Expense.amount <= max_amount)
 
-    sort_column = getattr(models.Expense, sort_by)
+    if sort_by not in ALLOWED_SORT_FIELDS:
+        raise HTTPException(
+        status_code=400,
+        detail=f"Invalid sort field. Allowed fields: {list(ALLOWED_SORT_FIELDS.keys())}"
+        )
+
+    sort_column = ALLOWED_SORT_FIELDS[sort_by]
+    
+    if order not in ["asc", "desc"]:
+        raise HTTPException(
+            status_code=400,
+            detail="order must be 'asc' or 'desc'"
+        )
 
     if order == "desc":
         query = query.order_by(sort_column.desc())
     else:
         query = query.order_by(sort_column.asc())
 
-    return query.offset(skip).limit(limit).all()
+    total = query.count()
+    expenses = query.offset(skip).limit(limit).all()
+    return {
+        "total": total,
+        "limit": limit,
+        "skip": skip,
+        "data": expenses
+    }
 
 def update_expense(db: Session, user_id: int, exp_id: int, exp_in):
     expense = (
